@@ -175,7 +175,7 @@ class ListingSearch
             return;
         }
 
-        $city = auth()->user()->city ?? '';
+        $city = auth()->user()?->city ?? '';
         $query->orderByRaw('CASE WHEN city = ? THEN 0 ELSE 1 END', [$city])->latest('published_at');
     }
 

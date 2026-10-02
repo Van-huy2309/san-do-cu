@@ -16,10 +16,11 @@ class HomeController extends Controller
         $categories = Category::activeCached();
         $brands = Brand::orderBy('name')->get();
         $area = AreaService::syncFromRequest($request);
-        $userCity = $area ?: (auth()->user()->city ?? null);
+        $user = auth()->user();
+        $userCity = $area ?: $user?->city;
         $geoPoint = $request->session()->get('relic.geo', [
-            'lat' => auth()->user()->lat ?? null,
-            'lng' => auth()->user()->lng ?? null,
+            'lat' => $user?->lat,
+            'lng' => $user?->lng,
         ]);
 
         $base = Listing::public()->with(['images', 'brand', 'category', 'origin', 'seller']);
