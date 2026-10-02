@@ -1,0 +1,22 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam sequenceMessageAlign left
+skinparam sequenceArrowColor black
+skinparam sequenceLifeLineBorderColor black
+title Biểu đồ tuần tự chức năng quản lý người dùng
+
+actor "Admin" as User
+boundary "Giao diện\nngười dùng" as UI
+control "Hệ thống xử lý" as Sys
+database "CSDL\nusers" as DB
+
+User -> UI : 1. Chọn khóa, mở khóa\nhoặc cấp quyền bán
+UI -> Sys : 2. Gửi yêu cầu cập nhật
+Sys -> Sys : 3. Kiểm tra quyền admin
+Sys -> DB : 4. Cập nhật tài khoản
+DB --> Sys : 5. Trả kết quả về
+Sys --> UI : 6. Xác nhận đã lưu
+UI --> User : 7. Hiển thị trạng thái\ntài khoản
+@enduml

@@ -1,0 +1,12 @@
+{
+  "source_sha256": "61c60f7f030bbf6102ea6402f66c125bd4355b34384304b3ccb5086a8b6199bd",
+  "body_child_count": 714,
+  "chapter3_start_child": 522,
+  "conclusion_start_child": 676,
+  "prefix_xml_sha256": "90aebe1372ab8b9c8e49a866212646599f9ec4e3c9d1419078f1b6be960408f1",
+  "suffix_xml_sha256": "d24987098ef62c95404fd4001a7d7228fdaeaec285c21a9ee81fa25ceb6a482a",
+  "start_text": "CHƯƠNG 3: GIAO DIỆN PHẦN MỀM",
+  "end_text": "KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN",
+  "chapter1_start_child": 107,
+  "chapters1_2_xml_sha256": "382940192d13998657db07f306a1a77e1376e8c4a44673e73ab1e8a0c95872ae"
+}

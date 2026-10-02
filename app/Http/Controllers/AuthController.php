@@ -1,0 +1,206 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Services\EmailVerificationService;
+use Exception;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+
+class AuthController extends Controller
+{
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:80',
+            'email' => 'required|email:filter|max:120|unique:users,email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        try {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'role' => 'customer',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Registration failed: ' . $e->getMessage());
+
+            return back()->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'Đăng ký thất bại. Vui lòng thử lại.');
+        }
+
+        Auth::login($user);
+
+        $request->session()->regenerate();
+        $request->session()->flash('relic.ai.open', true);
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (Exception $e) {
+            Log::error('Verification email failed: ' . $e->getMessage());
+
+            return redirect()->route('verification.notice')
+                ->with('warning', 'Tài khoản đã tạo nhưng gửi email xác thực thất bại. Bấm gửi lại trên trang này.');
+        }
+
+        return redirect()->route('verification.notice')
+            ->with('success', 'Đăng ký thành công. Nhập mã 6 số đã gửi vào email — không cần bấm link trên điện thoại.');
+    }
+
+    public function showLoginForm(Request $request)
+    {
+        $redirect = $request->query('redirect');
+        if (is_string($redirect) && str_starts_with($redirect, $request->root())) {
+            $request->session()->put('url.intended', $redirect);
+        }
+
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $key = 'login:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return back()->with('error', 'Thử đăng nhập quá nhiều. Vui lòng đợi một phút.');
+        }
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::clear($key);
+            $request->session()->regenerate();
+
+            if (Auth::user()->is_banned) {
+                $reason = Auth::user()->ban_reason ?: 'Tài khoản đã bị khóa.';
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->with('error', 'Tài khoản bị khóa: ' . $reason);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return redirect()->intended(route('admin.dashboard'));
+            }
+
+            $request->session()->flash('relic.ai.open', true);
+
+            return redirect()->intended(route('home'));
+        }
+
+        RateLimiter::hit($key, 60);
+
+        return back()->with('error', 'Email hoặc mật khẩu không đúng.');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
+    }
+
+    public function showForgotForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', 'Đã gửi link đặt lại mật khẩu vào email.')
+            : back()->with('error', 'Không gửi được. Kiểm tra email hoặc cấu hình MAIL trong .env.');
+    }
+
+    public function showResetForm(string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => request('email'),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', 'Đã đổi mật khẩu. Hãy đăng nhập.')
+            : back()->with('error', 'Link hết hạn hoặc không hợp lệ.');
+    }
+
+    public function sendVerification(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('home');
+        }
+
+        try {
+            $request->user()->sendEmailVerificationNotification();
+        } catch (Exception $e) {
+            Log::error('Resend verification failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Không gửi được email xác thực. Thử lại hoặc kiểm tra hộp Spam.');
+        }
+
+        return back()->with('message', 'Đã gửi mã 6 số vào email. Mở hộp thư rồi nhập mã tại đây.');
+    }
+
+    public function confirmVerification(Request $request, EmailVerificationService $codes)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('home');
+        }
+
+        $data = $request->validate([
+            'code' => 'required|string|size:6',
+        ]);
+
+        try {
+            $codes->confirm($request->user()->fresh(), $data['code']);
+            $request->user()->refresh();
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->intended(route('home'))
+            ->with('success', 'Xác thực email thành công. Bạn có thể mua hàng và đăng bán.');
+    }
+}

@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam activityBackgroundColor white
+skinparam activityBorderColor black
+skinparam activityDiamondBackgroundColor white
+skinparam activityDiamondBorderColor black
+skinparam activityStartColor black
+skinparam activityEndColor black
+title Sơ đồ hoạt động chức năng giỏ hàng và đặt hàng
+
+|Người dùng|
+start
+:Chọn thêm vào giỏ;
+
+|Hệ thống|
+:Kiểm tra đăng nhập;
+if (Đã đăng nhập?) then (Đúng)
+  :Lưu tin vào giỏ;
+  :Hiển thị giỏ hàng;
+else (Sai)
+  :Yêu cầu đăng nhập;
+  stop
+endif
+
+|Người dùng|
+:Chọn đặt hàng;
+
+|Hệ thống|
+:Mở trang thanh toán;
+stop
+@enduml

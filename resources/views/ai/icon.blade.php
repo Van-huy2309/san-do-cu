@@ -1,0 +1,1 @@
+<svg class="ai-ico" viewBox="0 0 32 32" width="{{ $size ?? 16 }}" height="{{ $size ?? 16 }}" aria-hidden="true"><path fill="currentColor" d="M16 3.2 18.2 10l6.8.3-5.3 4.3 1.8 6.6L16 17.6 10.5 21.2l1.8-6.6L7 10.3l6.8-.3L16 3.2Zm0 20.2 1.1 3.3 3.4.2-2.6 2.1.9 3.3L16 27.4l-2.8 1.9.9-3.3-2.6-2.1 3.4-.2L16 23.4Z"/></svg>

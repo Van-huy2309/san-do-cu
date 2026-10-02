@@ -1,0 +1,28 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam activityBackgroundColor white
+skinparam activityBorderColor black
+skinparam activityDiamondBackgroundColor white
+skinparam activityDiamondBorderColor black
+skinparam activityStartColor black
+skinparam activityEndColor black
+title Sơ đồ hoạt động chức năng đánh giá
+
+|Người dùng|
+start
+:Chọn đánh giá trên tin đã mua;
+:Nhập số sao và nhận xét;
+:Xác nhận;
+
+|Hệ thống|
+:Kiểm tra người đã mua;
+if (Kiểm tra) then (Đúng)
+  :Lưu đánh giá;
+  :Báo thành công;
+else (Sai)
+  :Báo lỗi;
+endif
+stop
+@enduml

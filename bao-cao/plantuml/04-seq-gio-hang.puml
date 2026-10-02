@@ -1,0 +1,23 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam sequenceMessageAlign left
+skinparam sequenceArrowColor black
+skinparam sequenceLifeLineBorderColor black
+title Biểu đồ tuần tự chức năng giỏ hàng và đặt hàng
+
+actor "Người dùng" as User
+boundary "Giao diện\ngiỏ hàng" as UI
+control "Hệ thống xử lý" as Sys
+database "CSDL\ngiỏ hàng" as DB
+
+User -> UI : 1. Chọn thêm vào giỏ
+UI -> Sys : 2. Gửi yêu cầu thêm tin
+Sys -> Sys : 3. Kiểm tra đăng nhập
+Sys -> DB : 4. Lưu tin vào giỏ
+DB --> Sys : 5. Trả kết quả về
+Sys --> UI : 6. Cập nhật giỏ hàng
+User -> UI : 7. Chọn đặt hàng
+UI --> User : 8. Mở trang thanh toán
+@enduml

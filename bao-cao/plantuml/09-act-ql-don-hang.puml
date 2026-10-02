@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam activityBackgroundColor white
+skinparam activityBorderColor black
+skinparam activityDiamondBackgroundColor white
+skinparam activityDiamondBorderColor black
+skinparam activityStartColor black
+skinparam activityEndColor black
+title Sơ đồ hoạt động chức năng quản lý đơn hàng
+
+|Admin|
+start
+:Đăng nhập;
+:Chọn quản lý đơn hàng;
+
+|Hệ thống|
+:Hiển thị danh sách đơn;
+
+|Admin|
+:Chọn đơn và trạng thái mới;
+:Xác nhận;
+
+|Hệ thống|
+:Kiểm tra trạng thái hợp lệ;
+if (Kiểm tra) then (Đúng)
+  :Lưu và báo thành công;
+else (Sai)
+  :Báo lỗi;
+endif
+stop
+@enduml

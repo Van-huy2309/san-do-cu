@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam activityBackgroundColor white
+skinparam activityBorderColor black
+skinparam activityDiamondBackgroundColor white
+skinparam activityDiamondBorderColor black
+skinparam activityStartColor black
+skinparam activityEndColor black
+title Sơ đồ hoạt động chức năng tìm và xem sản phẩm
+
+|Người dùng|
+start
+:Mở trang chợ;
+:Nhập từ khóa hoặc bộ lọc;
+
+|Hệ thống|
+:Tìm tin đăng;
+if (Có tin?) then (Có)
+  :Hiển thị danh sách tin;
+else (Không)
+  :Báo không tìm thấy;
+  stop
+endif
+
+|Người dùng|
+:Chọn một tin;
+
+|Hệ thống|
+:Hiển thị chi tiết, giá\nvà hồ sơ nguồn gốc;
+stop
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam sequenceMessageAlign left
+skinparam sequenceArrowColor black
+skinparam sequenceLifeLineBorderColor black
+title Biểu đồ tuần tự chức năng đăng tin bán
+
+actor "Người bán" as User
+boundary "Giao diện\nđăng tin" as UI
+control "Hệ thống xử lý" as Sys
+database "CSDL\ntin đăng" as DB
+
+User -> UI : 1. Nhập thông tin máy\nvà ảnh
+UI -> Sys : 2. Gửi yêu cầu đăng tin
+Sys -> Sys : 3. Kiểm tra dữ liệu
+Sys -> DB : 4. Lưu tin chờ duyệt
+DB --> Sys : 5. Trả kết quả về
+Sys --> UI : 6. Xác nhận đã nhận tin
+UI --> User : 7. Thông báo tin\nđang chờ duyệt
+@enduml

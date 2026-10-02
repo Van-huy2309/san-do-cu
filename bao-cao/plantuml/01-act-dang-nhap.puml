@@ -1,0 +1,32 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam fontName Times New Roman
+skinparam activityBackgroundColor white
+skinparam activityBorderColor black
+skinparam activityDiamondBackgroundColor white
+skinparam activityDiamondBorderColor black
+skinparam activityStartColor black
+skinparam activityEndColor black
+title Sơ đồ hoạt động chức năng đăng nhập
+
+|Người dùng|
+start
+:Mở trang đăng nhập;
+
+|Hệ thống|
+:Hiển thị form đăng nhập;
+
+|Người dùng|
+:Nhập email và mật khẩu;
+:Xác nhận;
+
+|Hệ thống|
+:Kiểm tra tài khoản;
+if (Kiểm tra) then (Đúng)
+  :Đăng nhập thành công;
+else (Sai)
+  :Báo lỗi;
+endif
+stop
+@enduml
