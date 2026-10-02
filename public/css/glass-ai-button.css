@@ -1,0 +1,125 @@
+/* Search row: the glass button fills the search pill. Area filter sits beside it. */
+
+.shop-head-inner > .mall-search-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.mall-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mall-search-row > .mall-searchbar {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.mall-search-row > .mall-searchbar > input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0 16px;
+  outline: none;
+}
+
+.mall-search-row > .area-picker {
+  flex: 0 0 auto;
+  height: 52px;
+  padding: 0 8px 0 12px;
+  border: 1px solid #b9ddf5;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, .1);
+}
+
+.mall-search-row > .area-picker .area-picker-btn {
+  min-height: 0;
+  height: 100%;
+  padding: 0 8px;
+}
+
+.glass-search-frame {
+  position: relative;
+  flex: 0 0 auto;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 3.45 / 1;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: transparent;
+  align-self: stretch;
+}
+
+.glass-search-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+
+.glass-search-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mall-hero-search.mall-search-row {
+  gap: 12px;
+  max-width: 880px;
+  margin: 0 auto;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.mall-hero-search .mall-searchbar {
+  height: 58px;
+  border: 0;
+  box-shadow: 0 14px 36px rgba(8, 51, 68, .18);
+}
+
+.mall-hero-search.mall-search-row > .area-picker {
+  height: 58px;
+  border: 0;
+  box-shadow: 0 10px 24px rgba(8, 51, 68, .16);
+}
+
+@media (max-width: 960px) {
+  .shop-head-inner > .mall-search-row {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .mall-hero-search.mall-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mall-hero-search.mall-search-row > .area-picker {
+    width: 100%;
+    justify-content: center;
+  }
+}

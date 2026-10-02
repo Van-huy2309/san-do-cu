@@ -29,10 +29,12 @@
             cũ — giá tốt, gần bạn
         </h1>
         <p class="lead">Chợ đồ điện tử cũ có người đứng giữa — chọn khu vực để xem tin đúng nơi bạn muốn mua.</p>
-        <form class="mall-hero-search" action="{{ route('listings.index') }}" method="get">
-            <input name="q" value="{{ request('q') }}" placeholder="Tìm iPhone, laptop, máy ảnh..." aria-label="Tìm kiếm">
+        <form class="mall-hero-search mall-search-row" action="{{ route('listings.index') }}" method="get">
+            <div class="mall-searchbar">
+                <input name="q" value="{{ request('q') }}" placeholder="Tìm iPhone, laptop, máy ảnh..." aria-label="Tìm kiếm">
+                @include('partials.glass-search-button')
+            </div>
             @include('partials.area-picker', ['pickerName' => 'city'])
-            <button class="btn btn-accent btn-shimmer" type="submit"><span>Tìm kiếm</span></button>
         </form>
     </div>
 </section>

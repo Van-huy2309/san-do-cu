@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url('css/relic.css') }}?v=shop5">
     <link rel="stylesheet" href="{{ url('css/relic-magic.css') }}?v=visible">
+    <link rel="stylesheet" href="{{ url('css/glass-ai-button.css') }}?v=search3">
     @stack('styles')
 </head>
 @php $isMall = request()->routeIs('home') || request()->routeIs('listings.index'); @endphp
@@ -42,10 +43,12 @@
     <div class="shop-head">
         <div class="wrap shop-head-inner">
             <a class="brand" href="{{ route('home') }}"><span class="brand-mark">R</span> Relic</a>
-            <form class="search search-lg mall-searchbar" action="{{ route('listings.index') }}" method="get">
-                <input name="q" value="{{ request('q') }}" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm">
+            <form class="mall-search-row" action="{{ route('listings.index') }}" method="get">
+                <div class="search search-lg mall-searchbar">
+                    <input name="q" value="{{ request('q') }}" placeholder="Tìm sản phẩm..." aria-label="Tìm kiếm">
+                    @include('partials.glass-search-button')
+                </div>
                 @include('partials.area-picker', ['pickerName' => 'city'])
-                <button type="submit">Tìm kiếm</button>
             </form>
             @unless (auth()->user()?->isAdmin())
             <a class="cart-btn" href="{{ route('user.cart.index') }}">Giỏ <b>{{ $cartCount ?? 0 }}</b></a>
@@ -290,6 +293,7 @@
 @auth
 @include('ai.care')
 @endauth
+<script src="{{ url('js/glass-ai-button.js') }}?v=search3" defer></script>
 @stack('scripts')
 </body>
 </html>
