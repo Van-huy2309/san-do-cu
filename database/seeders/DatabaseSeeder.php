@@ -28,6 +28,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        if (Category::query()->exists()) {
+            return;
+        }
+
         $keep = [
             ['Điện thoại', 'dien-thoai', '📱', 'Smartphone cũ'],
             ['Máy tính bảng', 'may-tinh-bang', '📲', 'iPad, tablet'],
