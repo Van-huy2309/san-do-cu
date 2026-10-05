@@ -10,7 +10,6 @@
     <div class="stat"><b>{{ number_format($held) }} ₫</b><span>Escrow đang giữ</span></div>
     <div class="stat"><b>{{ number_format($released) }} ₫</b><span>Đã giải ngân (gốc)</span></div>
     <div class="stat"><b>{{ number_format($commission) }} ₫</b><span>Phí sàn 5%</span></div>
-    <div class="stat"><b>{{ number_format($boost) }} ₫</b><span>Thu đẩy tin</span></div>
     <div class="stat"><b>{{ number_format($summary['revenue']) }} ₫</b><span>Doanh thu 30 ngày</span></div>
     <div class="stat"><b>{{ $pendingTx->total() }}</b><span>GD ví chờ duyệt</span></div>
 </div>
@@ -47,7 +46,6 @@ window.addEventListener('DOMContentLoaded', () => {
             labels: series.labels,
             datasets: [
                 { label: 'Hoa hồng', data: series.commission, borderColor: '#1d6ef5', tension: .3, fill: false },
-                { label: 'Đẩy tin', data: series.boost, borderColor: '#0ea5a0', tension: .3, fill: false },
             ]
         },
         options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }

@@ -23,16 +23,12 @@ class HomeController extends Controller
             'lng' => $user?->lng,
         ]);
 
-        $base = Listing::public()->with(['images', 'brand', 'category', 'origin', 'seller']);
+        $base = Listing::public()->with(['images', 'brand', 'category', 'origin', 'seller'])
+            ->withExists(['marketingEnrollments as is_advertised' => fn ($query) => $query->running()]);
         $inArea = (clone $base)->inArea($area);
 
         $featured = (clone $inArea)
-            ->where(function ($q) {
-                $q->where('is_featured', true)
-                    ->where(function ($inner) {
-                        $inner->whereNull('featured_until')->orWhere('featured_until', '>', now());
-                    });
-            })
+            ->whereHas('marketingEnrollments', fn ($query) => $query->running())
             ->latest('published_at')
             ->take(8)
             ->get();
@@ -60,12 +56,18 @@ class HomeController extends Controller
 
         $suggested = (clone $base)->latest('published_at')->take(12)->get();
 
-        $filmstripAds = Listing::public()
+        $adListings = Listing::public()
+            ->with(['images', 'category', 'brand'])
+            ->whereHas('marketingEnrollments', fn ($query) => $query->running())
+            ->latest('published_at')
+            ->take(8)
+            ->get();
+        $filmstripAds = ($adListings->isNotEmpty() ? $adListings : Listing::public()
             ->with(['images', 'category', 'brand'])
             ->orderByDesc('views')
             ->orderByDesc('published_at')
             ->take(8)
-            ->get()
+            ->get())
             ->map(function (Listing $listing) {
                 return [
                     'id' => $listing->id,

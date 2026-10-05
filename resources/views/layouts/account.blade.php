@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.theme-boot')
     <title>@yield('title', 'Tài khoản') — Relic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,13 +27,11 @@
         </div>
         <a href="{{ route('account.profile') }}" class="{{ request()->routeIs('account.profile') || request()->routeIs('account.change.*') ? 'is-on' : '' }}">Thông tin</a>
         @unless (auth()->user()->isAdmin())
-        <a href="{{ route('account.kyc') }}" class="{{ request()->routeIs('account.kyc') ? 'is-on' : '' }}">KYC</a>
         <a href="{{ route('favorites.index') }}" class="{{ request()->routeIs('favorites.*') ? 'is-on' : '' }}">Yêu thích</a>
         <a href="{{ route('user.orders.index') }}" class="{{ request()->routeIs('user.orders.*') ? 'is-on' : '' }}">Đơn mua</a>
         <a href="{{ route('messages.index') }}" class="{{ request()->routeIs('messages.*') ? 'is-on' : '' }}">Tin nhắn</a>
         <a href="{{ route('support.index') }}" class="{{ request()->routeIs('support.*') ? 'is-on' : '' }}">Chat với admin</a>
-        <a href="{{ route('seller.listings.index') }}" class="{{ request()->routeIs('seller.listings.index') ? 'is-on' : '' }}">Tin đang bán</a>
-        <a href="{{ route('seller.listings.create') }}" class="{{ request()->routeIs('seller.listings.create') ? 'is-on' : '' }}">Đăng tin</a>
+        <a href="{{ route('seller.listings.index') }}">Kênh người bán</a>
         @endunless
         <button type="button" class="ai-nav-link" data-ai-open>@include('ai.icon') AI Care</button>
         @if (auth()->user()->isAdmin())

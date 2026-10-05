@@ -10,6 +10,7 @@ use App\Models\PaymentTransaction;
 use App\Services\EscrowService;
 use App\Services\GHNOrderService;
 use App\Services\GHNService;
+use App\Services\VoucherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,27 @@ class OrderController extends Controller
         $totalPrice = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
 
         return view('orders.checkout', compact('cart', 'totalPrice'));
+    }
+
+    public function previewVoucher(Request $request, VoucherService $vouchers)
+    {
+        $cart = session('cart', []);
+        $code = trim((string) $request->input('voucher_code', ''));
+        if ($code === '' || $cart === []) {
+            return response()->json(['ok' => false, 'discount' => 0, 'message' => 'Nhập mã giảm giá.']);
+        }
+
+        try {
+            $quote = $vouchers->quote($code, $cart);
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'discount' => 0, 'message' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'discount' => $quote['discount'],
+            'message' => 'Giảm '.number_format($quote['discount'], 0, ',', '.').' ₫. Còn '.$quote['voucher']->remaining().' lượt.',
+        ]);
     }
 
     public function history()
@@ -111,6 +133,7 @@ class OrderController extends Controller
             'to_district_id' => 'required|integer',
             'to_ward_code' => 'required|string',
             'payment_method' => 'required|in:cod,momo',
+            'voucher_code' => 'nullable|string|max:20',
         ]);
 
         $cart = session('cart', []);
@@ -135,7 +158,7 @@ class OrderController extends Controller
         $finalTotal = $subtotal + $shippingFee;
 
         try {
-            $order = DB::transaction(function () use ($request, $shippingFee, $finalTotal, $cart) {
+            $order = DB::transaction(function () use ($request, $shippingFee, $subtotal, $cart) {
                 $fresh = Listing::whereIn('id', collect($cart)->pluck('id'))->lockForUpdate()->get()->keyBy('id');
 
                 foreach ($cart as $item) {
@@ -156,19 +179,44 @@ class OrderController extends Controller
                     }
                 }
 
+                $lines = collect($cart)->map(function ($item) use ($fresh) {
+                    $listing = $fresh->get($item['id']);
+
+                    return [
+                        'seller_id' => $listing->seller_id,
+                        'price' => (int) $item['price'],
+                        'quantity' => 1,
+                    ];
+                });
+
+                $discount = 0;
+                $voucherId = null;
+                $code = trim((string) $request->input('voucher_code', ''));
+                if ($code !== '') {
+                    $quote = app(VoucherService::class)->quote($code, $lines);
+                    $discount = $quote['discount'];
+                    $voucherId = $quote['voucher']->id;
+                }
+
                 $order = Order::create([
                     'code' => 'RLC' . now()->format('ymd') . strtoupper(Str::random(5)),
                     'user_id' => Auth::id(),
                     'name' => $request->name,
                     'address' => $request->address,
                     'phone' => $request->phone,
-                    'total_price' => $finalTotal,
+                    'total_price' => max(0, $subtotal - $discount) + $shippingFee,
+                    'voucher_id' => $voucherId,
+                    'discount_amount' => $discount,
                     'status' => 'pending',
                     'to_district_id' => (int) $request->to_district_id,
                     'to_ward_code' => (string) $request->to_ward_code,
                     'ghn_total_fee' => $shippingFee,
                     'shipping_status' => 'pending',
                 ]);
+
+                if ($code !== '') {
+                    app(VoucherService::class)->redeem($code, $lines, Auth::user(), $order);
+                }
 
                 foreach ($cart as $item) {
                     $listing = $fresh->get($item['id']);
@@ -185,7 +233,11 @@ class OrderController extends Controller
                 return $order;
             });
         } catch (\RuntimeException $e) {
-            return redirect()->route('user.cart.index')->with('error', $e->getMessage());
+            $listingProblem = str_contains($e->getMessage(), 'Tin ') || str_contains($e->getMessage(), 'giỏ');
+
+            return $listingProblem
+                ? redirect()->route('user.cart.index')->with('error', $e->getMessage())
+                : redirect()->route('user.payment.index')->with('error', $e->getMessage())->withInput();
         }
 
         session()->forget('cart');
@@ -244,8 +296,8 @@ class OrderController extends Controller
         $escrow->releaseToSellers($order->load('items'));
 
         $message = $wasCod
-            ? 'Đã xác nhận nhận hàng (COD, không qua ví escrow).'
-            : 'Đã xác nhận nhận hàng. Tiền escrow được giải ngân vào ví người bán (trừ 5% phí sàn).';
+            ? 'Đã xác nhận nhận hàng. Tiền COD vào tài khoản admin, trừ 5% phí sàn, rồi chuyển về tài khoản ngân hàng shop.'
+            : 'Đã xác nhận nhận hàng. Tiền đang ở tài khoản admin được trừ 5% phí sàn và chuyển về tài khoản ngân hàng shop.';
 
         return back()->with('success', $message);
     }

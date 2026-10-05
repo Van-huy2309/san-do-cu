@@ -7,7 +7,7 @@
     <ol>
         <li>Xác minh CCCD (KYC) → admin duyệt.</li>
         <li>Đăng tin: ảnh, tình trạng, hộp/BH, hồ sơ nguồn gốc (serial).</li>
-        <li>Ẩn / hiện / đánh dấu đã bán / đẩy tin bằng ví.</li>
+        <li>Ẩn / hiện / đánh dấu đã bán, tạo phiếu giảm giá cho shop, đăng ký gói quảng cáo khi còn suất.</li>
         <li>Nhận tiền vào ví sau escrow (trừ 5%).</li>
     </ol>
     <h3>Người mua</h3>

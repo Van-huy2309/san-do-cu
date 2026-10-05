@@ -154,6 +154,14 @@
                 <span class="badge">Tin này</span>
             @endif
             <p>{{ $review->comment ?: 'Không có nội dung.' }}</p>
+            @if ($review->seller_reply)
+                <p class="muted">Shop trả lời
+                    @if ($review->replied_at)
+                        · {{ $review->replied_at->format('d/m/Y') }}
+                    @endif
+                </p>
+                <p>{{ $review->seller_reply }}</p>
+            @endif
         </div>
     @empty
         <p class="muted">Shop chưa có đánh giá.</p>

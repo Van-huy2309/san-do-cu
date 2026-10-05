@@ -1,0 +1,12 @@
+---
+description: Khi người dùng hỏi một chức năng trên giao diện, mở đúng file view và controller theo MO_FILE_GIAO_DIEN.md
+alwaysApply: true
+---
+
+# Mở file theo chức năng giao diện
+
+Khi người dùng hỏi một nút, trang, menu hoặc luồng trên giao diện Relic, đọc `MO_FILE_GIAO_DIEN.md` và mở các file cột Giao diện rồi Controller của đúng hàng trước khi giải thích.
+
+- Trang sàn bọc bởi `resources/views/layouts/store.blade.php`. Trang tài khoản bọc bởi `layouts/account.blade.php`. Admin bọc bởi `layouts/admin.blade.php`.
+- File Blade `resources/views/a/b.blade.php` tương ứng `return view('a.b')`.
+- Partial (`_card`, `_promo`, `area-picker`) là mảnh nhúng, không phải cả trang.

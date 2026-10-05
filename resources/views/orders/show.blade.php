@@ -37,6 +37,9 @@
             </form>
         @endif
     @endforeach
+    @if ((int) $order->discount_amount > 0)
+        <p>Giảm giá: <strong>-{{ number_format($order->discount_amount, 0, ',', '.') }} ₫</strong></p>
+    @endif
     <p>Tổng: <strong>{{ number_format($order->total_price, 0, ',', '.') }} ₫</strong></p>
     @if (in_array($order->shipping_status, ['pending','ready_to_pick','not_shipped'], true) && $order->status !== 'cancelled')
         <form method="post" action="{{ route('user.orders.cancel', $order) }}" onsubmit="return confirm('Hủy đơn?')">@csrf<button class="btn btn-danger">Hủy đơn</button></form>

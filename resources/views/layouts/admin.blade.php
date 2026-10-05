@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.theme-boot')
     <title>Admin Relic — @yield('title', 'Bảng điều khiển')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
@@ -25,6 +26,10 @@
         <a href="{{ route('admin.disputes') }}" class="{{ request()->routeIs('admin.disputes*') ? 'is-on' : '' }}">Khiếu nại</a>
         <a href="{{ route('admin.finance') }}" class="{{ request()->routeIs('admin.finance*') ? 'is-on' : '' }}">Tài chính</a>
         <a href="{{ route('admin.categories') }}" class="{{ request()->routeIs('admin.categories*') ? 'is-on' : '' }}">Danh mục</a>
+        <a href="{{ route('admin.cashflow') }}" class="{{ request()->routeIs('admin.cashflow*') ? 'is-on' : '' }}">Dòng tiền</a>
+        <a href="{{ route('admin.vouchers') }}" class="{{ request()->routeIs('admin.vouchers*') ? 'is-on' : '' }}">Phiếu giảm giá</a>
+        <a href="{{ route('admin.marketing') }}" class="{{ request()->routeIs('admin.marketing*') ? 'is-on' : '' }}">Marketing</a>
+        <a href="{{ route('admin.traffic') }}" class="{{ request()->routeIs('admin.traffic*') ? 'is-on' : '' }}">Chặn tấn công</a>
         <button type="button" class="ai-nav-link" data-ai-open>@include('ai.icon') AI Ops</button>
         <a href="{{ route('home') }}">Về sàn</a>
         <form method="post" action="{{ route('logout') }}" style="margin-top:16px;">@csrf<button class="btn btn-ghost btn-sm">Đăng xuất</button></form>

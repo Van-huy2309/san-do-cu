@@ -65,6 +65,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'fail2ban' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/relic-auth.log'),
+            'level' => 'warning',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

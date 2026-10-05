@@ -100,8 +100,8 @@
 @if ($featured->isNotEmpty())
 <section class="section blur-fade">
     <div class="section-head">
-        <h2>Tin đẩy top</h2>
-        <span class="muted">Người bán mua gói đẩy tin 7 ngày</span>
+        <h2>Quảng cáo</h2>
+        <span class="muted">Sản phẩm đăng ký gói marketing</span>
     </div>
     <div class="grid">
         @foreach ($featured as $listing)
@@ -162,15 +162,10 @@
             <p>Bật GPS hoặc chọn tỉnh — tin đúng khu vực hiện lên trước.</p>
         </a>
         @unless (auth()->user()?->isAdmin())
-        <a class="bento-cell" href="{{ route('seller.listings.create') }}">
+        <a class="bento-cell" href="{{ route('seller.listings.index') }}">
             <span class="ico">📦</span>
-            <h3>Đăng bán</h3>
-            <p>KYC xong là up tin. Ảnh + serial + tình trạng rõ ràng.</p>
-        </a>
-        <a class="bento-cell" href="{{ route('account.kyc') }}">
-            <span class="ico">🪪</span>
-            <h3>KYC người bán</h3>
-            <p>CCCD 2 mặt — giảm nick ảo, tăng uy tín shop.</p>
+            <h3>Kênh người bán</h3>
+            <p>Quản lý shop, sản phẩm và tài khoản nhận tiền.</p>
         </a>
         @else
         <a class="bento-cell" href="{{ route('listings.index') }}">

@@ -1,4 +1,4 @@
-@extends('layouts.account')
+@extends('layouts.seller')
 @section('title', 'Định danh KYC')
 @section('content')
 <h1>Định danh người bán</h1>

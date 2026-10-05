@@ -3,7 +3,7 @@
 @section('content')
 @include('admin.partials.chartjs')
 <h1>Báo cáo doanh thu</h1>
-<p class="muted">Hoa hồng 5% + phí đẩy tin · khoảng {{ $days }} ngày gần nhất ({{ $summary['from']->format('d/m/Y') }} – {{ $summary['to']->format('d/m/Y') }}). Đánh giá doanh số: hỏi Relic Ops.</p>
+<p class="muted">Hoa hồng 5% · khoảng {{ $days }} ngày gần nhất ({{ $summary['from']->format('d/m/Y') }} – {{ $summary['to']->format('d/m/Y') }}). Đánh giá doanh số: hỏi Relic Ops.</p>
 
 <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 8px;align-items:center">
     @foreach ([7, 14, 30, 90] as $d)
@@ -17,7 +17,6 @@
 <div class="stats">
     <div class="stat"><b>{{ number_format($summary['revenue']) }}₫</b><span>Doanh thu sàn</span></div>
     <div class="stat"><b>{{ number_format($summary['commission']) }}₫</b><span>Hoa hồng 5%</span></div>
-    <div class="stat"><b>{{ number_format($summary['boost']) }}₫</b><span>Phí đẩy tin</span></div>
     <div class="stat"><b>{{ number_format($summary['gmv_released']) }}₫</b><span>GMV đã giải ngân</span></div>
     <div class="stat"><b>{{ number_format($summary['gmv_held']) }}₫</b><span>Escrow đang giữ</span></div>
     <div class="stat"><b>{{ $summary['orders'] }}</b><span>Đơn trong kỳ</span></div>
@@ -93,7 +92,6 @@ window.addEventListener('DOMContentLoaded', () => {
             labels: series.labels,
             datasets: [
                 { label: 'Hoa hồng', data: series.commission, borderColor: '#1d6ef5', tension: .3, fill: false, pointRadius: 2 },
-                { label: 'Đẩy tin', data: series.boost, borderColor: '#0ea5a0', tension: .3, fill: false, pointRadius: 2 },
             ]
         },
         options: { ...baseOpts, scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, maxTicksLimit: 8 } } } }

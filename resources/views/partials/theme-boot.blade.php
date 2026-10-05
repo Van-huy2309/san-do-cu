@@ -1,0 +1,5 @@
+<script>
+try {
+    if (localStorage.getItem('relic-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+} catch (e) {}
+</script>

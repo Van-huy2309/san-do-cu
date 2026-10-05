@@ -7,7 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Review extends Model
 {
-    protected $fillable = ['reviewer_id', 'seller_id', 'listing_id', 'rating', 'comment'];
+    protected $fillable = [
+        'reviewer_id', 'seller_id', 'listing_id', 'rating', 'comment', 'seller_reply', 'replied_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'replied_at' => 'datetime',
+        ];
+    }
 
     public function reviewer(): BelongsTo
     {

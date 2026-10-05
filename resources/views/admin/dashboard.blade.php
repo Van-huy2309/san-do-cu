@@ -13,7 +13,6 @@
 <div class="stats" style="margin-top:12px">
     <div class="stat"><b>{{ number_format($summary['revenue']) }}₫</b><span>Doanh thu 30 ngày</span></div>
     <div class="stat"><b>{{ number_format($summary['commission']) }}₫</b><span>Hoa hồng 5%</span></div>
-    <div class="stat"><b>{{ number_format($summary['boost']) }}₫</b><span>Phí đẩy tin</span></div>
     <div class="stat"><b>{{ number_format($summary['gmv_held']) }}₫</b><span>Escrow đang giữ</span></div>
 </div>
 

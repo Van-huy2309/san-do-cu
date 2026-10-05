@@ -16,6 +16,7 @@ class ShopController extends Controller
         $listings = Listing::public()
             ->where('seller_id', $user->id)
             ->with(['images', 'origin', 'brand', 'seller'])
+            ->withExists(['marketingEnrollments as is_advertised' => fn ($query) => $query->running()])
             ->when($sort === 'price_asc', fn ($q) => $q->orderBy('price'))
             ->when($sort === 'price_desc', fn ($q) => $q->orderByDesc('price'))
             ->when(! in_array($sort, ['price_asc', 'price_desc'], true), fn ($q) => $q->latest('published_at'))

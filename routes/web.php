@@ -3,8 +3,12 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\CashflowController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\MarketingController;
+use App\Http\Controllers\Admin\TrafficController;
+use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\AuthController;
@@ -19,7 +23,11 @@ use App\Http\Controllers\ListingController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\McpController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SellerBankController;
+use App\Http\Controllers\SellerEarningController;
+use App\Http\Controllers\SellerReviewController;
 use App\Http\Controllers\SellerListingController;
+use App\Http\Controllers\SellerVoucherController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\User\GHNController;
 use App\Http\Controllers\User\MomoController;
@@ -28,6 +36,10 @@ use App\Http\Controllers\User\SupportChatController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+if (\App\Support\RelicRole::isFinance()) {
+    return;
+}
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/cho', [ListingController::class, 'index'])->name('listings.index');
@@ -43,6 +55,7 @@ Route::middleware('guest')->group(function () {
     Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [AuthController::class, 'register']);
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login/nguoi', [AuthController::class, 'confirmHuman'])->middleware('throttle:10,1')->name('login.human');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:8,1');
     Route::get('forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request');
     Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:6,1')->name('password.email');
@@ -114,6 +127,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/analytics/export', [AnalyticsController::class, 'export'])->name('analytics.export');
     Route::get('/disputes', [AdminController::class, 'disputes'])->name('disputes');
     Route::post('/disputes/{dispute}/resolve', [AdminController::class, 'resolveDispute'])->name('disputes.resolve');
+    Route::get('/phieu-giam-gia', [AdminVoucherController::class, 'index'])->name('vouchers');
+    Route::post('/phieu-giam-gia', [AdminVoucherController::class, 'store'])->name('vouchers.store');
+    Route::post('/phieu-giam-gia/{voucher}/toggle', [AdminVoucherController::class, 'toggle'])->name('vouchers.toggle');
+    Route::get('/marketing', [MarketingController::class, 'index'])->name('marketing');
+    Route::post('/marketing', [MarketingController::class, 'store'])->name('marketing.store');
+    Route::post('/marketing/{package}/toggle', [MarketingController::class, 'toggle'])->name('marketing.toggle');
+    Route::get('/tan-cong', [TrafficController::class, 'index'])->name('traffic');
+    Route::post('/tan-cong/tai-khoan/{user}', [TrafficController::class, 'banUser'])->name('traffic.ban-user');
+    Route::post('/tan-cong/tai-khoan/{user}/mo', [TrafficController::class, 'liftUser'])->name('traffic.lift-user');
+    Route::post('/tan-cong/ip', [TrafficController::class, 'banIp'])->name('traffic.ban-ip');
+    Route::post('/tan-cong/ip/{ban}', [TrafficController::class, 'liftIp'])->name('traffic.lift-ip');
+    Route::get('/dong-tien', [CashflowController::class, 'index'])->name('cashflow');
+    Route::get('/dong-tien/xuat', [CashflowController::class, 'export'])->name('cashflow.export');
 });
 
 Route::middleware('deny.admin.shop')->group(function () {
@@ -155,6 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/thanh-toan', [OrderController::class, 'checkout'])->middleware('deny.admin.shop')->name('user.payment.index');
+    Route::post('/thanh-toan/phieu', [OrderController::class, 'previewVoucher'])->middleware('deny.admin.shop')->name('user.payment.voucher');
     Route::post('/thanh-toan', [OrderController::class, 'process'])->middleware('deny.admin.shop')->name('user.payment.process');
     Route::get('/don-hang', [OrderController::class, 'history'])->name('user.orders.index');
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('user.orders.show');
@@ -168,6 +195,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ho-so/kyc', [KycController::class, 'store'])->name('account.kyc.store');
 
     Route::get('/ban', [SellerListingController::class, 'index'])->name('seller.listings.index');
+    Route::get('/ban/ngan-hang', [SellerBankController::class, 'edit'])->name('seller.bank');
+    Route::post('/ban/ngan-hang', [SellerBankController::class, 'update'])->name('seller.bank.update');
+    Route::get('/ban/tien', [SellerEarningController::class, 'index'])->name('seller.earnings');
+    Route::get('/ban/tien/xuat', [SellerEarningController::class, 'export'])->name('seller.earnings.export');
+    Route::get('/ban/phan-hoi', [SellerReviewController::class, 'index'])->name('seller.reviews.index');
+    Route::post('/ban/phan-hoi/{review}', [SellerReviewController::class, 'reply'])->name('seller.reviews.reply');
+    Route::get('/ban/phieu', [SellerVoucherController::class, 'index'])->name('seller.vouchers.index');
+    Route::post('/ban/phieu', [SellerVoucherController::class, 'store'])->name('seller.vouchers.store');
+    Route::post('/ban/phieu/{voucher}/toggle', [SellerVoucherController::class, 'toggle'])->name('seller.vouchers.toggle');
     Route::get('/ban/dang-tin', [SellerListingController::class, 'create'])->name('seller.listings.create');
     Route::post('/ban/dang-tin', [SellerListingController::class, 'store'])->name('seller.listings.store');
     Route::post('/ban/uoc-gia', [SellerListingController::class, 'estimate'])->middleware('throttle:20,1')->name('seller.estimate');
@@ -176,5 +212,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ban/{listing}/an', [SellerListingController::class, 'hide'])->name('seller.listings.hide');
     Route::post('/ban/{listing}/hien', [SellerListingController::class, 'publish'])->name('seller.listings.publish');
     Route::post('/ban/{listing}/da-ban', [SellerListingController::class, 'markSold'])->name('seller.listings.sold');
-    Route::post('/ban/{listing}/day-tin', [SellerListingController::class, 'boost'])->name('seller.listings.boost');
+    Route::post('/ban/{listing}/quang-cao', [SellerListingController::class, 'promote'])->name('seller.listings.promote');
 });

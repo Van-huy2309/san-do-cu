@@ -1,9 +1,131 @@
+# Compose điều phối cả cụm. Chỉ gateway mở cổng ra ngoài.
+# Service ngân hàng nằm mạng vault, web gọi nội bộ bằng gói tin có chữ ký.
+
 services:
-  web:
-    build: .
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
     ports:
       - "8080:80"
-    env_file:
-      - .env
+    volumes:
+      - ./docker/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [edge]
+
+  web:
+    build: .
+    image: relic-app:local
+    restart: unless-stopped
+    env_file: [.env]
     environment:
+      RELIC_ROLE: web
       PORT: "80"
+      APP_URL: http://localhost:8080
+      DB_HOST: market-db
+      DB_PORT: "3306"
+      DB_DATABASE: relic_market
+      DB_USERNAME: relic
+      DB_PASSWORD: ${COMPOSE_MARKET_PASSWORD:-relic-market-dev}
+      FINANCE_API_URL: http://finance
+      FINANCE_API_KEY_ID: ${FINANCE_API_KEY_ID:-relic-finance}
+      FINANCE_API_SECRET: ${FINANCE_API_SECRET:-dev-only-change-this-finance-key!}
+      FINANCE_API_SECRET_PREVIOUS: ${FINANCE_API_SECRET_PREVIOUS:-}
+      FINANCE_DB_HOST: "127.0.0.1"
+      FINANCE_DB_PORT: "1"
+      FINANCE_DB_DATABASE: none
+      FINANCE_DB_USERNAME: none
+      FINANCE_DB_PASSWORD: ""
+    depends_on:
+      market-db:
+        condition: service_healthy
+      finance:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/up') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    networks: [edge, app, market]
+
+  finance:
+    build: .
+    image: relic-app:local
+    restart: unless-stopped
+    environment:
+      RELIC_ROLE: finance
+      PORT: "80"
+      APP_NAME: Relic
+      APP_ENV: local
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_TIMEZONE: Asia/Ho_Chi_Minh
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: finance
+      FINANCE_DB_HOST: finance-db
+      FINANCE_DB_PORT: "3306"
+      FINANCE_DB_DATABASE: relic_finance
+      FINANCE_DB_USERNAME: relic_finance
+      FINANCE_DB_PASSWORD: ${COMPOSE_FINANCE_PASSWORD:-relic-finance-dev}
+      FINANCE_API_KEY_ID: ${FINANCE_API_KEY_ID:-relic-finance}
+      FINANCE_API_SECRET: ${FINANCE_API_SECRET:-dev-only-change-this-finance-key!}
+      FINANCE_API_SECRET_PREVIOUS: ${FINANCE_API_SECRET_PREVIOUS:-}
+      FINANCE_API_SKEW: "60"
+    depends_on:
+      finance-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/up') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    networks: [app, vault]
+
+  market-db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${COMPOSE_MARKET_ROOT_PASSWORD:-relic-market-dev}
+      MYSQL_DATABASE: relic_market
+      MYSQL_USER: relic
+      MYSQL_PASSWORD: ${COMPOSE_MARKET_PASSWORD:-relic-market-dev}
+    volumes:
+      - market-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [market]
+
+  finance-db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${COMPOSE_FINANCE_ROOT_PASSWORD:-relic-finance-dev}
+      MYSQL_DATABASE: relic_finance
+      MYSQL_USER: relic_finance
+      MYSQL_PASSWORD: ${COMPOSE_FINANCE_PASSWORD:-relic-finance-dev}
+    volumes:
+      - finance-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [vault]
+
+networks:
+  edge:
+  app:
+  market:
+  vault:
+
+volumes:
+  market-data:
+  finance-data:

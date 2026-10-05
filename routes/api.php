@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ListingController;
 use Illuminate\Support\Facades\Route;
 
+if (\App\Support\RelicRole::isFinance()) {
+    return;
+}
+
 Route::get('/listings', [ListingController::class, 'index']);
 Route::get('/listings/{listing:slug}', [ListingController::class, 'show']);
 Route::get('/categories', function () {

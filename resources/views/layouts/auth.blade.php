@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.theme-boot')
     <title>@yield('title', 'Đăng nhập') — Relic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url('css/relic.css') }}?v=auth5">
+    <link rel="stylesheet" href="{{ url('css/relic.css') }}?v=auth6">
     <link rel="stylesheet" href="{{ url('css/three-d-paper.css') }}?v=auth3">
 </head>
 @php

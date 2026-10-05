@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.theme-boot')
     <title>@yield('title', 'Relic') — Chợ đồ điện tử cũ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url('css/relic.css') }}?v=shop5">
+    <link rel="stylesheet" href="{{ url('css/relic.css') }}?v=theme7">
     <link rel="stylesheet" href="{{ url('css/relic-magic.css') }}?v=visible">
     <link rel="stylesheet" href="{{ url('css/glass-ai-button.css') }}?v=search3">
     @stack('styles')
@@ -22,7 +23,7 @@
             <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-on' : '' }}">Home</a>
             <a href="{{ route('listings.index') }}" class="{{ request()->routeIs('listings.index') ? 'is-on' : '' }}">Chợ</a>
             @unless (auth()->user()?->isAdmin())
-            <a href="{{ route('seller.listings.create') }}">Kênh người bán</a>
+            <a href="{{ route('seller.listings.index') }}">Kênh người bán</a>
             @endunless
             <span class="mini-spacer"></span>
             <form class="area-quick" action="{{ route('area.store') }}" method="get">
@@ -33,8 +34,10 @@
                 @unless (auth()->user()->isAdmin())
                 <a href="{{ route('favorites.index') }}">Yêu thích</a>
                 @endunless
+                @include('partials.theme-toggle')
                 <button type="button" class="ai-nav-link" data-ai-open>@include('ai.icon') AI Care</button>
             @else
+                @include('partials.theme-toggle')
                 <a href="{{ route('register') }}">Đăng ký</a>
                 <a href="{{ route('login') }}">Đăng nhập</a>
             @endauth
@@ -130,8 +133,7 @@
         <div>
             <strong>Bán hàng</strong>
             @unless (auth()->user()?->isAdmin())
-            <p><a href="{{ route('account.kyc') }}">KYC</a></p>
-            <p><a href="{{ route('seller.listings.create') }}">Đăng tin</a></p>
+            <p><a href="{{ route('seller.listings.index') }}">Kênh người bán</a></p>
             @endunless
             @if (auth()->user()?->isAdmin())
             <p><a href="{{ route('admin.dashboard') }}">Quản trị</a></p>
@@ -294,6 +296,18 @@
 @include('ai.care')
 @endauth
 <script src="{{ url('js/glass-ai-button.js') }}?v=search3" defer></script>
+<script>
+(function () {
+    const box = document.getElementById('theme-toggle');
+    if (!box) return;
+    box.checked = document.documentElement.dataset.theme === 'dark';
+    box.addEventListener('change', () => {
+        if (box.checked) document.documentElement.dataset.theme = 'dark';
+        else delete document.documentElement.dataset.theme;
+        try { localStorage.setItem('relic-theme', box.checked ? 'dark' : 'light'); } catch (e) {}
+    });
+})();
+</script>
 @stack('scripts')
 </body>
 </html>

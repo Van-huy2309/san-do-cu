@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\LoginJail;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class AuthController extends Controller
         return $this->tokenResponse($user);
     }
 
-    public function login(Request $request)
+    public function login(Request $request, LoginJail $jail)
     {
         $data = $request->validate([
             'email' => 'required|email',
@@ -38,8 +39,13 @@ class AuthController extends Controller
         ]);
         $user = User::where('email', $data['email'])->first();
         if (! $user || ! $user->password || ! Hash::check($data['password'], $user->password)) {
+            if ($jail->hit($request->ip())) {
+                return response()->json(['message' => $jail->message($request->ip())], 403);
+            }
+
             return response()->json(['message' => 'Email hoặc mật khẩu không đúng.'], 422);
         }
+        $jail->clear($request->ip());
         if ($user->is_banned) {
             return response()->json(['message' => 'Tài khoản bị khóa.'], 403);
         }

@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\DenyAdminShop;
 use App\Http\Middleware\EnsureNotBanned;
+use App\Http\Middleware\LimitTraffic;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,15 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
+        then: function () {
+            if (! \App\Support\RelicRole::isFinance()) {
+                return;
+            }
+
+            \Illuminate\Support\Facades\Route::middleware(\App\Http\Middleware\VerifyFinanceSignature::class)
+                ->prefix('internal/finance')
+                ->group(base_path('routes/finance.php'));
+        },
     )
-    ->withCommands([
-        App\Console\Commands\E2eAuditCommand::class,
-        App\Console\Commands\WipeDemoDataCommand::class,
-    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->append(SecurityHeaders::class);
         $middleware->appendToGroup('web', EnsureNotBanned::class);
+        $middleware->appendToGroup('web', LimitTraffic::class);
+        $middleware->appendToGroup('api', EnsureNotBanned::class);
+        $middleware->appendToGroup('api', LimitTraffic::class);
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'deny.admin.shop' => DenyAdminShop::class,
@@ -34,7 +43,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'ghn/webhook',
             'payment/momo/ipn',
-            'auth/apple/callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

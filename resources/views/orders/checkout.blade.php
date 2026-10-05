@@ -40,6 +40,12 @@
             <li>9704 0000 0000 0034 — không đủ tiền</li>
             <li>9704 0000 0000 0042 — vượt hạn mức</li>
         </ul>
+        <label>Mã giảm giá</label>
+        <div class="meta" style="gap:8px;align-items:center">
+            <input class="field" id="voucher_code" name="voucher_code" value="{{ old('voucher_code') }}" placeholder="Nhập mã của sàn hoặc shop" style="flex:1">
+            <button class="btn btn-ghost" type="button" id="apply_voucher">Xem mã</button>
+        </div>
+        <p class="muted" id="voucher_message"></p>
         <input type="hidden" id="total_price_input" value="{{ (int) $totalPrice }}">
         <button class="btn btn-accent" style="margin-top:16px;width:100%">Đặt hàng</button>
     </form>
@@ -49,6 +55,7 @@
             <div class="meta" style="justify-content:space-between"><span>{{ $item['name'] }}</span><strong>{{ number_format($item['price'], 0, ',', '.') }} ₫</strong></div>
         @endforeach
         <p>Tiền hàng: <strong>{{ number_format($totalPrice, 0, ',', '.') }} ₫</strong></p>
+        <p>Giảm giá: <strong id="discount_text">0 ₫</strong></p>
         <p>Phí GHN: <strong id="shipping_fee_text">0 ₫</strong></p>
         <p>Tổng: <strong id="final_total_text">{{ number_format($totalPrice, 0, ',', '.') }} ₫</strong></p>
     </div>
@@ -61,13 +68,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const districtSelect = document.getElementById('district_select');
     const wardSelect = document.getElementById('ward_select');
     const shippingFeeText = document.getElementById('shipping_fee_text');
+    const discountText = document.getElementById('discount_text');
     const finalTotalText = document.getElementById('final_total_text');
     const districtsUrl = "{{ route('locations.districts', ['provinceId' => '__PROVINCE__']) }}";
     const wardsUrl = "{{ route('locations.wards', ['districtId' => '__DISTRICT__']) }}";
     const subtotal = parseInt(document.getElementById('total_price_input').value) || 0;
-    function updateTotals(fee) {
-        shippingFeeText.innerText = new Intl.NumberFormat('vi-VN').format(fee) + ' ₫';
-        finalTotalText.innerText = new Intl.NumberFormat('vi-VN').format(subtotal + fee) + ' ₫';
+    let shippingFee = 0;
+    let discount = 0;
+    function money(value) {
+        return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
+    }
+    function updateTotals() {
+        shippingFeeText.innerText = money(shippingFee);
+        discountText.innerText = money(discount);
+        finalTotalText.innerText = money(Math.max(0, subtotal - discount) + shippingFee);
     }
     fetch("{{ route('locations.provinces') }}", { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
         .then(r => r.json()).then(res => {
@@ -75,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
             provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>' + list.map(p => `<option value="${p.ProvinceID ?? p.province_id}">${p.ProvinceName ?? p.province_name}</option>`).join('');
         }).catch(() => { provinceSelect.innerHTML = '<option>Không tải được GHN</option>'; });
     provinceSelect.addEventListener('change', function () {
-        districtSelect.disabled = true; wardSelect.disabled = true; updateTotals(0);
+        districtSelect.disabled = true; wardSelect.disabled = true; shippingFee = 0; updateTotals();
         if (!this.value) return;
         fetch(districtsUrl.replace('__PROVINCE__', this.value), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
             .then(r => r.json()).then(res => {
@@ -85,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
     districtSelect.addEventListener('change', function () {
-        wardSelect.disabled = true; updateTotals(0);
+        wardSelect.disabled = true; shippingFee = 0; updateTotals();
         if (!this.value) return;
         fetch(wardsUrl.replace('__DISTRICT__', this.value), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
             .then(r => r.json()).then(res => {
@@ -101,8 +115,21 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
             body: JSON.stringify({ to_district_id: districtSelect.value, to_ward_code: this.value })
         }).then(r => r.json()).then(res => {
-            updateTotals(res.code === 200 && res.data ? parseInt(res.data.total) || 0 : 0);
+            shippingFee = res.code === 200 && res.data ? parseInt(res.data.total) || 0 : 0;
+            updateTotals();
         });
+    });
+    document.getElementById('apply_voucher').addEventListener('click', function () {
+        const message = document.getElementById('voucher_message');
+        fetch("{{ route('user.payment.voucher') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: JSON.stringify({ voucher_code: document.getElementById('voucher_code').value })
+        }).then(r => r.json()).then(res => {
+            discount = res.ok ? parseInt(res.discount) || 0 : 0;
+            message.textContent = res.message || '';
+            updateTotals();
+        }).catch(() => { message.textContent = 'Không kiểm tra được mã.'; });
     });
 });
 </script>

@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\MarketingPackage;
 use App\Models\SearchAlert;
 use App\Services\AreaService;
+use App\Services\FinanceBook;
 use App\Services\GeoService;
+use App\Services\MarketingService;
 use App\Services\MediaService;
 use App\Services\OriginService;
 use App\Services\PricingEngine;
-use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -22,17 +24,29 @@ class SellerListingController extends Controller
     public function index()
     {
         $listings = Listing::where('seller_id', Auth::id())
-            ->with(['images', 'origin', 'category'])
+            ->with([
+                'images', 'origin', 'category',
+                'marketingEnrollments' => fn ($query) => $query->running()->with('package'),
+            ])
             ->latest()
             ->paginate(12);
 
         $sales = Auth::user()->listings()->where('status', 'sold')->count();
+        $packages = MarketingPackage::query()
+            ->where('is_active', true)
+            ->withCount(['enrollments as taken_slots' => fn ($query) => $query->where('ends_at', '>', now())])
+            ->orderBy('name')
+            ->get();
+        $bank = app(FinanceBook::class)->bankFor((int) Auth::id());
 
-        return view('seller.listings.index', compact('listings', 'sales'));
+        return view('seller.listings.index', compact('listings', 'sales', 'packages', 'bank'));
     }
 
     public function create()
     {
+        if ($redirect = $this->bankRedirect()) {
+            return $redirect;
+        }
         if (Auth::user()->isAdmin()) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'Tài khoản quản trị không đăng bán trên sàn.');
@@ -54,6 +68,9 @@ class SellerListingController extends Controller
     {
         abort_if($request->user()->isAdmin(), 403, 'Tài khoản quản trị không đăng bán.');
         abort_unless($request->user()->kycVerified(), 403, 'Cần KYC để đăng tin.');
+        if ($redirect = $this->bankRedirect()) {
+            return $redirect;
+        }
 
         $data = $this->validated($request);
         $user = $request->user();
@@ -243,28 +260,23 @@ class SellerListingController extends Controller
         return back()->with('success', 'Đã đánh dấu đã bán.');
     }
 
-    public function boost(Listing $listing, WalletService $wallet)
+    public function promote(Request $request, Listing $listing, MarketingService $marketing)
     {
         $this->authorizeSeller($listing);
         abort_unless($listing->isActive(), 403);
+        abort_unless($request->user()->kycVerified(), 403);
+
+        $data = $request->validate([
+            'marketing_package_id' => ['required', 'integer', 'exists:marketing_packages,id'],
+        ]);
 
         try {
-            $wallet->debit(
-                Auth::user(),
-                WalletService::BOOST_FEE,
-                'boost',
-                'Đẩy tin #' . $listing->id . ' 7 ngày'
-            );
+            $enrollment = $marketing->enroll($listing, $request->user(), (int) $data['marketing_package_id']);
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $listing->update([
-            'is_featured' => true,
-            'featured_until' => now()->addDays(7),
-        ]);
-
-        return back()->with('success', 'Tin đã được đẩy lên mục nổi bật trong 7 ngày.');
+        return back()->with('success', 'Tin đã vào mục quảng cáo đến '.$enrollment->ends_at->format('d/m/Y').'.');
     }
 
     private function storeImages(Request $request, Listing $listing, MediaService $media): void
@@ -312,5 +324,16 @@ class SellerListingController extends Controller
     private function authorizeSeller(Listing $listing): void
     {
         abort_unless($listing->seller_id === Auth::id(), 403);
+    }
+
+    private function bankRedirect()
+    {
+        if (app(FinanceBook::class)->hasBank((int) Auth::id())) {
+            return null;
+        }
+
+        return redirect()
+            ->route('seller.bank')
+            ->with('warning', 'Đăng ký tài khoản ngân hàng của shop trước khi đăng bán.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\EmailVerificationService;
+use App\Services\LoginJail;
 use Exception;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -67,11 +68,52 @@ class AuthController extends Controller
             $request->session()->put('url.intended', $redirect);
         }
 
-        return view('auth.login');
+        $prefix = Str::random(16);
+        $request->session()->put('human', [
+            'prefix' => $prefix,
+            'at' => now()->timestamp,
+        ]);
+        $request->session()->forget('human_ok');
+
+        return view('auth.login', ['humanPrefix' => $prefix]);
     }
 
-    public function login(Request $request)
+    public function confirmHuman(Request $request)
     {
+        if ($request->filled('company')) {
+            return response()->json(['ok' => false], 422);
+        }
+
+        $human = $request->session()->get('human');
+        $solution = (string) $request->input('solution', '');
+        if (! is_array($human) || $solution === '' || strlen($solution) > 8 || ! ctype_digit($solution)) {
+            return response()->json(['ok' => false, 'message' => 'Hãy bấm lại nút tôi là người.'], 422);
+        }
+
+        $age = now()->timestamp - (int) ($human['at'] ?? 0);
+        if ($age < 0 || $age > 180) {
+            return response()->json(['ok' => false, 'message' => 'Hãy bấm lại nút tôi là người.'], 422);
+        }
+
+        $hash = hash('sha256', $human['prefix'].'|'.$solution);
+        if (! str_starts_with($hash, '00')) {
+            return response()->json(['ok' => false, 'message' => 'Chưa xác nhận được. Bấm lại nút.'], 422);
+        }
+
+        $request->session()->put('human_ok', now()->timestamp);
+        $request->session()->forget('human');
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function login(Request $request, LoginJail $jail)
+    {
+        $okAt = (int) $request->session()->get('human_ok', 0);
+        if ($okAt < 1 || (now()->timestamp - $okAt) > 120) {
+            return back()->with('error', 'Hãy bấm «Tôi là người» trên trang này trước khi đăng nhập.');
+        }
+        $request->session()->forget('human_ok');
+
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
@@ -79,11 +121,14 @@ class AuthController extends Controller
 
         $key = 'login:' . $request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return back()->with('error', 'Thử đăng nhập quá nhiều. Vui lòng đợi một phút.');
+            $banned = $jail->hit($request->ip());
+
+            return back()->with('error', $banned ? $jail->message($request->ip()) : 'Thử đăng nhập quá nhiều. Vui lòng đợi một phút.');
         }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::clear($key);
+            $jail->clear($request->ip());
             $request->session()->regenerate();
 
             if (Auth::user()->is_banned) {
@@ -105,8 +150,9 @@ class AuthController extends Controller
         }
 
         RateLimiter::hit($key, 60);
+        $banned = $jail->hit($request->ip());
 
-        return back()->with('error', 'Email hoặc mật khẩu không đúng.');
+        return back()->with('error', $banned ? $jail->message($request->ip()) : 'Email hoặc mật khẩu không đúng.');
     }
 
     public function logout(Request $request)

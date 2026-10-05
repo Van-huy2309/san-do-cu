@@ -1,4 +1,4 @@
-@extends('layouts.account')
+@extends('layouts.seller')
 @section('title', $listing->exists ? 'Sửa tin' : 'Đăng bán')
 @section('content')
 <h1>{{ $listing->exists ? 'Sửa tin' : 'Đăng bán máy cũ' }}</h1>

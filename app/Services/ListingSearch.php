@@ -99,7 +99,8 @@ class ListingSearch
 
     private function filteredQuery(Request $request)
     {
-        $query = Listing::public()->with(['images', 'brand', 'category', 'origin', 'seller']);
+        $query = Listing::public()->with(['images', 'brand', 'category', 'origin', 'seller'])
+            ->withExists(['marketingEnrollments as is_advertised' => fn ($query) => $query->running()]);
 
         if ($request->filled('category')) {
             $query->where('category_id', $request->integer('category'));

@@ -18,7 +18,7 @@
     <a class="btn btn-ghost" href="{{ route('messages.index') }}">Tin nhắn</a>
 </div>
 @endunless
-<a class="change-link" href="{{ route('account.kyc') }}">Định danh CCCD</a>
+<a class="change-link" href="{{ route('seller.listings.index') }}">Kênh người bán</a>
  · <a class="change-link" href="{{ route('account.change.index') }}">Thay đổi thông tin</a>
 <p class="muted" style="font-size:.82rem">Mọi thay đổi đều cần mã xác thực gửi về email {{ $user->email }}. Email không thể đổi.</p>
 @endsection

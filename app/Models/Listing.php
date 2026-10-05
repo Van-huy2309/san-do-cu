@@ -101,14 +101,23 @@ class Listing extends Model
         return $this->hasMany(Favorite::class);
     }
 
+    public function marketingEnrollments(): HasMany
+    {
+        return $this->hasMany(MarketingEnrollment::class);
+    }
+
     public function extra(string $key, mixed $default = null): mixed
     {
         return data_get($this->extras, $key, $default);
     }
 
-    public function isBoosted(): bool
+    public function isAdvertised(): bool
     {
-        return $this->is_featured && ($this->featured_until === null || $this->featured_until->isFuture());
+        if (array_key_exists('is_advertised', $this->attributes)) {
+            return (bool) $this->is_advertised;
+        }
+
+        return $this->marketingEnrollments()->running()->exists();
     }
 
     public function statusLabel(): string

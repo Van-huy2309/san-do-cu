@@ -11,8 +11,8 @@
                 </button>
             </form>
         @endauth
-        @if ($listing->isBoosted())
-            <span class="card-flag">Đẩy tin</span>
+        @if ($listing->isAdvertised())
+            <span class="card-flag">Quảng cáo</span>
         @endif
     </div>
     <div class="card-body">
